@@ -82,7 +82,7 @@
 ## Security, logout, and deployment follow-up
 
 - [x] Add password visibility toggle with accessible label and keyboard support
-- [ ] Implement server-side login/demo-access rate limiting with safe user feedback and tests
+- [x] Implement server-side login/demo-access rate limiting with safe user feedback and tests
 - [ ] Add logout button to the authenticated NITCRES dashboard and clear demo/session state
 - [ ] Validate each change and create a separate documented commit for each feature
 - [ ] Push each feature commit separately to GitHub and verify commit order

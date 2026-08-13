@@ -9,6 +9,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { addAuditEvent, createSimulation, getAuditEvents, getDashboardSnapshot, getOperationalIntelligence, getSimulations, updateRiskScore } from "./db";
+import { checkDemoRateLimit, DEMO_LOGIN_EMAIL, DEMO_LOGIN_PASSWORD } from "./demoRateLimit";
 
 const roleProcedure = (roles: string[]) => protectedProcedure.use(({ ctx, next }) => {
   const role = ctx.user.platformRole ?? "admin";
@@ -24,6 +25,19 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+    demoAccess: publicProcedure.input(z.object({ email: z.string().email(), password: z.string().min(1) })).mutation(({ ctx, input }) => {
+      const forwarded = ctx.req.headers["x-forwarded-for"];
+      const forwardedIp = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0];
+      const requestKey = ctx.req.ip ?? forwardedIp ?? "unknown-client";
+      const limit = checkDemoRateLimit(requestKey);
+      if (!limit.allowed) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: `Too many demo access attempts. Try again in ${limit.retryAfterSeconds} seconds.` });
+      }
+      if (input.email !== DEMO_LOGIN_EMAIL || input.password !== DEMO_LOGIN_PASSWORD) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Demo credentials do not match the published synthetic access details." });
+      }
+      return { success: true, synthetic: true, remainingAttempts: limit.remaining } as const;
     }),
   }),
   intelligence: router({
