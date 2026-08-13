@@ -8,7 +8,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { addAuditEvent, createSimulation, getAuditEvents, getDashboardSnapshot, updateRiskScore } from "./db";
+import { addAuditEvent, createSimulation, getAuditEvents, getDashboardSnapshot, getOperationalIntelligence, getSimulations, updateRiskScore } from "./db";
 
 const roleProcedure = (roles: string[]) => protectedProcedure.use(({ ctx, next }) => {
   const role = ctx.user.platformRole ?? "admin";
@@ -62,6 +62,8 @@ export const appRouter = router({
       if (!input.reason.trim()) throw new TRPCError({ code: "BAD_REQUEST", message: "A human override reason is required." });
       return updateRiskScore(input.taxpayerId, input.score, input.reason, ctx.user.id);
     }),
+    operationalIntelligence: roleProcedure(["admin", "auditor", "risk_analyst", "customs_officer", "policy_analyst"]).query(async () => getOperationalIntelligence()),
+    simulations: roleProcedure(["admin", "policy_analyst"]).query(async () => ({ syntheticOnly: true, runs: await getSimulations() })),
     simulatePolicy: roleProcedure(["admin", "policy_analyst"]).input(z.object({ name: z.string().min(3), vatRate: z.number().min(0).max(100), exemptionChange: z.number().min(-100).max(100) })).mutation(async ({ ctx, input }) => {
       if (input.vatRate < 0 || input.vatRate > 100) throw new TRPCError({ code: "BAD_REQUEST", message: "VAT rate must be between 0 and 100." });
       return createSimulation({ ...input, actorId: ctx.user.id });

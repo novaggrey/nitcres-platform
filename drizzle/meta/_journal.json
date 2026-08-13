@@ -22,6 +22,13 @@
       "when": 1786643149153,
       "tag": "0002_broken_marvex",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786643685783,
+      "tag": "0003_slippery_sauron",
+      "breakpoints": true
     }
   ]
 }

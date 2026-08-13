@@ -7,10 +7,13 @@ import {
   auditEvents,
   cases,
   customsFlags,
+  entities,
+  fieldAudits,
   invoices,
   simulations,
   taxpayerAssets,
   taxpayers,
+  transactions,
   users,
 } from "../drizzle/schema";
 
@@ -114,6 +117,13 @@ export async function ensureSyntheticSeed() {
     { taxpayerId: ids[0]!, assetType: "procurement", description: "Synthetic port logistics contract", value: "640000000", source: "Synthetic procurement feed", acquiredAt: new Date("2025-04-04"), synthetic: true },
   ]);
 
+  await db.insert(entities).values(ids.map((id, index) => ({ taxpayerId: id!, entityType: taxpayerRows[index]!.taxpayerType === "company" ? "company" as const : "individual" as const, legalName: taxpayerRows[index]!.displayName, registrationNo: `SYN-REG-${1000 + index}`, source: "Synthetic business registry", confidence: taxpayerRows[index]!.confidence, synthetic: true })));
+  await db.insert(transactions).values([
+    { taxpayerId: ids[0]!, counterpartyTin: taxpayerRows[2]!.tin, transactionType: "B2B invoice settlement", amount: "84000000", currency: "TZS", source: "Synthetic payments feed", occurredAt: new Date("2026-01-12"), synthetic: true },
+    { taxpayerId: ids[2]!, counterpartyTin: taxpayerRows[0]!.tin, transactionType: "B2B invoice settlement", amount: "83500000", currency: "TZS", source: "Synthetic payments feed", occurredAt: new Date("2026-01-14"), synthetic: true },
+    { taxpayerId: ids[1]!, counterpartyTin: "SYN-100081", transactionType: "Property maintenance", amount: "19000000", currency: "TZS", source: "Synthetic bank feed", occurredAt: new Date("2026-02-04"), synthetic: true },
+  ]);
+
   await db.insert(invoices).values([
     { invoiceNo: "SYN-INV-2201", sellerTin: taxpayerRows[0]!.tin, buyerTin: taxpayerRows[2]!.tin, amount: "84000000", vatAmount: "14237288", description: "Industrial packaging services", riskType: "Circular trading loop", riskScore: 94, synthetic: true },
     { invoiceNo: "SYN-INV-2202", sellerTin: taxpayerRows[2]!.tin, buyerTin: taxpayerRows[0]!.tin, amount: "83500000", vatAmount: "14152542", description: "Industrial packaging services", riskType: "Circular trading loop", riskScore: 89, synthetic: true },
@@ -124,6 +134,11 @@ export async function ensureSyntheticSeed() {
     { caseRef: "NIT-2026-0042", taxpayerId: ids[0]!, module: "VAT Graph Analytics", title: "Circular invoice topology detected", summary: "Synthetic invoice graph shows reciprocal trading between two connected entities with limited underlying goods movement.", priority: "critical", status: "in_review", assignedRole: "auditor", evidence: ["SYN-INV-2201", "SYN-INV-2202"], synthetic: true },
     { caseRef: "NIT-2026-0043", taxpayerId: ids[1]!, module: "Lifestyle Reconciliation", title: "Declared income and assets diverge", summary: "Synthetic property and vehicle records materially exceed declared income; this is an investigative lead requiring human review.", priority: "high", status: "new", assignedRole: "risk_analyst", evidence: ["Synthetic land registry", "Synthetic vehicle registry"], synthetic: true },
     { caseRef: "NIT-2026-0044", taxpayerId: null, module: "Customs Intelligence", title: "Shipment valuation variance", summary: "Synthetic shipment value is below sector benchmark and requires document validation before any action.", priority: "medium", status: "assigned", assignedRole: "customs_officer", evidence: ["SYN-SHIP-0881"], synthetic: true },
+  ]);
+
+  await db.insert(fieldAudits).values([
+    { caseId: 1, officerId: 1, outcome: "Pending document validation", notes: "Synthetic field audit pack awaiting authorised officer review.", evidenceCount: 2, synthetic: true },
+    { caseId: 2, officerId: 1, outcome: "Lead opened", notes: "Synthetic asset-income discrepancy requires source validation.", evidenceCount: 2, synthetic: true },
   ]);
 
   await db.insert(customsFlags).values([
@@ -158,6 +173,26 @@ export async function getDashboardSnapshot() {
   };
 }
 
+export async function getOperationalIntelligence() {
+  const snapshot = await getDashboardSnapshot();
+  if (!snapshot) return null;
+  const priorityWeight: Record<string, number> = { critical: 3, high: 2, medium: 1, low: 0 };
+  const prioritizedCases = [...snapshot.cases].sort((a, b) => (priorityWeight[b.priority] ?? 0) - (priorityWeight[a.priority] ?? 0));
+  const declaredBase = snapshot.taxpayers.reduce((sum, row) => sum + Number(row.declaredIncome ?? 0), 0);
+  const estimatedBase = Math.round(declaredBase * 1.214);
+  const assignedCount = prioritizedCases.filter((item) => item.status === "assigned" || item.status === "in_review").length;
+  const workload = Math.round((assignedCount / Math.max(prioritizedCases.length, 1)) * 100);
+  const slaHealth = Math.round(((prioritizedCases.length - prioritizedCases.filter((item) => item.priority === "critical" && item.status === "new").length) / Math.max(prioritizedCases.length, 1)) * 100);
+  const assigneeState = Object.entries(prioritizedCases.reduce<Record<string, number>>((acc, item) => { const key = item.assignedRole ?? "unassigned"; acc[key] = (acc[key] ?? 0) + 1; return acc; }, {})).map(([role, count]) => ({ role, count }));
+  return {
+    syntheticOnly: true,
+    transferPricing: { relatedPartyExposure: 8400000000000, benchmarkVariance: 23.8, indicators: 12, comparables: [{ label: "Services", variance: 18.4, benchmark: "IQR +18.4%" }, { label: "Royalties", variance: 11.2, benchmark: "IQR +11.2%" }, { label: "Goods", variance: -7.6, benchmark: "IQR -7.6%" }] },
+    auditOperations: { prioritizedCases, workload, unassigned: prioritizedCases.filter((item) => item.status === "new").length, slaHealth, assigneeState },
+    taxGap: { declaredBase, estimatedBase, gapRate: Number((((estimatedBase - declaredBase) / estimatedBase) * 100).toFixed(1)), revenueCapacity: Math.round((estimatedBase - declaredBase) * 0.82), confidence: 91 },
+    executive: { collectionIndex: 82.4, preventedLeakage: 3.8, highRisk: snapshot.kpis.highRisk, operationalHealth: slaHealth >= 80 ? "Good" : "Watch", regional: snapshot.regional, dataFreshness: Math.min(100, 90 + snapshot.invoices.length * 2), auditSla: slaHealth, integrationHealth: Math.min(100, 94 + snapshot.customs.length * 2) },
+  };
+}
+
 export async function addAuditEvent(actorId: number | undefined, action: string, entityType: string, entityId: string, details: unknown) {
   const db = await getDb();
   if (!db) return;
@@ -180,6 +215,12 @@ export async function updateRiskScore(taxpayerId: number, score: number, reason:
   await db.update(taxpayers).set({ riskScore: bounded, riskBand: riskBandForScore(bounded), riskReasons: [...reasons, `Human override: ${reason}`] }).where(eq(taxpayers.id, taxpayerId));
   await addAuditEvent(actorId, "risk_score_override", "taxpayer", String(taxpayerId), { previousScore: current[0].riskScore, newScore: bounded, reason, synthetic: true });
   return { score: bounded, band: riskBandForScore(bounded) };
+}
+
+export async function getSimulations(limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(simulations).orderBy(desc(simulations.createdAt)).limit(limit);
 }
 
 export async function createSimulation(input: { name: string; vatRate: number; exemptionChange: number; actorId: number }) {

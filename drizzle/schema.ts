@@ -33,6 +33,41 @@ export const taxpayers = mysqlTable("taxpayers", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const entities = mysqlTable("entities", {
+  id: int("id").autoincrement().primaryKey(),
+  taxpayerId: int("taxpayerId").notNull(),
+  entityType: mysqlEnum("entityType", ["individual", "company", "related_party"]).notNull(),
+  legalName: varchar("legalName", { length: 180 }).notNull(),
+  registrationNo: varchar("registrationNo", { length: 80 }).notNull(),
+  source: varchar("source", { length: 120 }).notNull(),
+  confidence: int("confidence").notNull().default(100),
+  synthetic: boolean("synthetic").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const transactions = mysqlTable("transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  taxpayerId: int("taxpayerId").notNull(),
+  counterpartyTin: varchar("counterpartyTin", { length: 32 }).notNull(),
+  transactionType: varchar("transactionType", { length: 80 }).notNull(),
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 8 }).notNull().default("TZS"),
+  source: varchar("source", { length: 120 }).notNull(),
+  occurredAt: timestamp("occurredAt").notNull(),
+  synthetic: boolean("synthetic").notNull().default(true),
+});
+
+export const fieldAudits = mysqlTable("field_audits", {
+  id: int("id").autoincrement().primaryKey(),
+  caseId: int("caseId").notNull(),
+  officerId: int("officerId").notNull(),
+  outcome: varchar("outcome", { length: 120 }).notNull(),
+  notes: text("notes").notNull(),
+  evidenceCount: int("evidenceCount").notNull().default(0),
+  synthetic: boolean("synthetic").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const taxpayerAssets = mysqlTable("taxpayer_assets", {
   id: int("id").autoincrement().primaryKey(),
   taxpayerId: int("taxpayerId").notNull(),
