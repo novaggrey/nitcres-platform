@@ -78,3 +78,12 @@
 ## Commit verification follow-up
 
 - [x] Create and verify a separately documented Git commit for the executed login test coverage and responsive verification updates
+
+## Security, logout, and deployment follow-up
+
+- [x] Add password visibility toggle with accessible label and keyboard support
+- [ ] Implement server-side login/demo-access rate limiting with safe user feedback and tests
+- [ ] Add logout button to the authenticated NITCRES dashboard and clear demo/session state
+- [ ] Validate each change and create a separate documented commit for each feature
+- [ ] Push each feature commit separately to GitHub and verify commit order
+- [ ] Inspect https://nitcres.vercel.app/ and identify the Vercel deployment issue without attempting deployment
