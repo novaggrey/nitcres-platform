@@ -61,3 +61,11 @@
 ## Final verification correction
 
 - [x] Use the server regional field consistently for the Executive Dashboard React key and capture final visual verification
+
+## Login and GitHub delivery
+
+- [ ] Add a dedicated NITCRES login page with pre-filled, clearly labeled demo credentials
+- [ ] Preserve secure authentication boundaries and distinguish demo access from production OAuth
+- [ ] Validate the login page visually, functionally, responsively, and with tests
+- [ ] Create a separately documented commit for the login-page implementation
+- [ ] Push the login commit to the configured GitHub repository and verify the remote branch
