@@ -20,7 +20,7 @@
 - [x] Add safeguards: human review, explainability, synthetic-data badges, evidence provenance, and non-conclusive UWI language
 - [x] Add Vitest coverage for access control, risk-score bounds, override logging, horizon enforcement, synthetic-data constraints, and core procedures
 - [x] Verify desktop and responsive layouts, loading states, empty states, errors, accessibility, and visual polish
-- [ ] Save a final checkpoint after all implementation and verification work is complete
+- [x] Save a final checkpoint after all implementation and verification work is complete
 
 ## Follow-up implementation gaps
 
