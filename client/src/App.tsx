@@ -6,6 +6,7 @@ import Home from "@/pages/Home";
 import { Route, Switch, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { isDemoSession } from "@/auth/demo";
+import { canUseDashboard, shouldOpenLogin } from "@/auth/interactionContracts";
 import { useEffect, useState } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -14,10 +15,10 @@ function DashboardGate() {
   const auth = useAuth();
   const [, navigate] = useLocation();
   const [demoActive] = useState(() => isDemoSession());
-  const hasSession = auth.isAuthenticated || demoActive;
+  const hasSession = canUseDashboard(auth.isAuthenticated, demoActive);
 
   useEffect(() => {
-    if (!auth.loading && !hasSession) navigate("/login");
+    if (shouldOpenLogin(auth.loading, auth.isAuthenticated, demoActive)) navigate("/login");
   }, [auth.loading, hasSession, navigate]);
 
   if (auth.loading || !hasSession) {

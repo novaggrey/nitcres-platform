@@ -97,3 +97,22 @@
 
 - [x] Create and push the logout feature as its own documented Git commit, then record its SHA and order
 - [x] Add explicit logout-flow verification covering demo-session clearing, auth logout invocation, and UI transition
+
+## Landing, navigation, search, and interaction refinement
+
+- [x] Make `/login` the default landing route and require demo or institutional sign-in before dashboard access
+- [x] Add a simple demo login choice for each NITCRES user type with clear synthetic-preview labeling
+- [x] Require confirmation before logout and show the correct post-logout landing state
+- [x] Make every primary navbar item navigate to its corresponding module workspace with active-state feedback and smooth transitions
+- [x] Implement working global search over synthetic taxpayers, cases, TINs, invoices, and customs records with useful empty and result states
+- [x] Add count-up transitions for dashboard metrics on initial dashboard entry
+- [x] Add purposeful hover/focus/press transitions while preserving keyboard accessibility and reduced-motion behavior
+- [x] Improve visual clarity, responsive layout, loading states, and interaction feedback across the login and dashboard flows
+- [x] Add tests for route protection, demo-role selection, confirmed logout, navigation, and search behavior
+- [x] Create and push separately documented commits for each logical refinement
+
+## Refinement verification gaps
+
+- [x] Add invoice records to global search and provide result navigation
+- [x] Add explicit loading, empty, and error feedback for login and dashboard flows
+- [x] Add executable tests for route protection, demo-role selection, navigation, and search behavior
