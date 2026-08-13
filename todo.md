@@ -83,7 +83,17 @@
 
 - [x] Add password visibility toggle with accessible label and keyboard support
 - [x] Implement server-side login/demo-access rate limiting with safe user feedback and tests
-- [ ] Add logout button to the authenticated NITCRES dashboard and clear demo/session state
-- [ ] Validate each change and create a separate documented commit for each feature
-- [ ] Push each feature commit separately to GitHub and verify commit order
+- [x] Add logout button to the authenticated NITCRES dashboard and clear demo/session state
+- [x] Validate each change and create a separate documented commit for each feature
+- [x] Push each feature commit separately to GitHub and verify commit order
 - [ ] Inspect https://nitcres.vercel.app/ and identify the Vercel deployment issue without attempting deployment
+
+## Logout verification follow-up
+
+- [x] Show logout controls only for authenticated users or active demo sessions
+- [x] Verify demo-session clearing, authenticated cookie clearing, and post-logout UI transition
+
+## Required before logout delivery
+
+- [ ] Create and push the logout feature as its own documented Git commit, then record its SHA and order
+- [x] Add explicit logout-flow verification covering demo-session clearing, auth logout invocation, and UI transition

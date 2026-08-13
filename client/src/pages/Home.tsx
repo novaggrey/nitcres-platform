@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
+import { completeLogout, isDemoSession } from "@/auth/demo";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Activity, AlertTriangle, ArrowUpRight, BarChart3, Bell, BookOpen, BriefcaseBusiness, Building2, ChevronRight, CircleDollarSign, Database, FileCheck2, FileText, Fingerprint, GitBranch, Landmark, LayoutDashboard, LockKeyhole, MapPinned, Network, PanelLeft, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, UploadCloud, UserRoundCheck, UsersRound, Waypoints, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowUpRight, BarChart3, Bell, BookOpen, BriefcaseBusiness, Building2, ChevronRight, CircleDollarSign, Database, FileCheck2, FileText, Fingerprint, GitBranch, Landmark, LayoutDashboard, LockKeyhole, LogOut, MapPinned, Network, PanelLeft, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, UploadCloud, UserRoundCheck, UsersRound, Waypoints, X } from "lucide-react";
 
 const roleLabels = {
   admin: "TRA Leadership",
@@ -66,6 +67,7 @@ function formatMoney(value: string | number) {
 export default function Home() {
   const auth = useAuth();
   const [role, setRole] = useState<Role>("admin");
+  const [demoActive, setDemoActive] = useState(() => isDemoSession());
   const [activeModule, setActiveModule] = useState("Overview");
   const [showSimulation, setShowSimulation] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<(typeof fallback.taxpayers)[number] | null>(null);
@@ -95,6 +97,11 @@ export default function Home() {
     simulate.mutate({ name: simulationName, vatRate, exemptionChange }, { onSuccess: () => setShowSimulation(false) });
   };
 
+  const handleLogout = async () => {
+    await completeLogout(auth.logout, () => setDemoActive(false));
+  };
+  const hasSession = auth.isAuthenticated || demoActive;
+
   return (
     <div className="min-h-screen bg-[#07121f] text-slate-100">
       <div className="flex min-h-screen">
@@ -111,7 +118,7 @@ export default function Home() {
         </aside>
 
         <main className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 flex h-[78px] items-center justify-between border-b border-white/10 bg-[#07121f]/90 px-5 backdrop-blur-xl lg:px-9"><div className="flex items-center gap-3"><button className="rounded-lg border border-white/10 p-2 text-slate-400 lg:hidden"><PanelLeft size={18} /></button><div><div className="flex items-center gap-2 text-xs text-slate-500"><span>TRA / NITCRES</span><ChevronRight size={12} /><span className="text-slate-300">{activeModule}</span></div><h1 className="mt-1 text-lg font-semibold tracking-tight">National revenue intelligence</h1></div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 md:flex"><Search size={15} className="text-slate-500" /><span className="text-xs text-slate-500">Search taxpayers, cases, TINs</span><kbd className="ml-6 rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-500">⌘ K</kbd></div><button className="relative rounded-xl border border-white/10 p-2.5 text-slate-400 hover:bg-white/5"><Bell size={17} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-400" /></button><div className="hidden items-center gap-2 border-l border-white/10 pl-3 sm:flex"><div className="grid h-8 w-8 place-items-center rounded-full bg-violet-300/20 text-xs font-semibold text-violet-200">{auth.user?.name?.slice(0, 2).toUpperCase() ?? "TR"}</div><div className="text-right"><p className="text-xs font-medium text-slate-200">{auth.user?.name ?? "TRA officer"}</p><p className="text-[10px] text-slate-500">{roleLabels[effectiveRole]}</p></div></div></div></header>
+          <header className="sticky top-0 z-20 flex h-[78px] items-center justify-between border-b border-white/10 bg-[#07121f]/90 px-5 backdrop-blur-xl lg:px-9"><div className="flex items-center gap-3"><button className="rounded-lg border border-white/10 p-2 text-slate-400 lg:hidden"><PanelLeft size={18} /></button><div><div className="flex items-center gap-2 text-xs text-slate-500"><span>TRA / NITCRES</span><ChevronRight size={12} /><span className="text-slate-300">{activeModule}</span></div><h1 className="mt-1 text-lg font-semibold tracking-tight">National revenue intelligence</h1></div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 md:flex"><Search size={15} className="text-slate-500" /><span className="text-xs text-slate-500">Search taxpayers, cases, TINs</span><kbd className="ml-6 rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-500">⌘ K</kbd></div><button className="relative rounded-xl border border-white/10 p-2.5 text-slate-400 hover:bg-white/5"><Bell size={17} /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-400" /></button>{hasSession && <><div className="hidden items-center gap-2 border-l border-white/10 pl-3 sm:flex"><div className="grid h-8 w-8 place-items-center rounded-full bg-violet-300/20 text-xs font-semibold text-violet-200">{auth.user?.name?.slice(0, 2).toUpperCase() ?? "TR"}</div><div className="text-right"><p className="text-xs font-medium text-slate-200">{auth.user?.name ?? "TRA officer"}</p><p className="text-[10px] text-slate-500">{roleLabels[effectiveRole]}</p></div><button type="button" onClick={handleLogout} aria-label="Log out" className="ml-2 rounded-lg border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"><LogOut size={15} /></button></div><button type="button" onClick={handleLogout} aria-label="Log out" className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 sm:hidden"><LogOut size={15} /></button></>}</div></header>
 
           <div className="mx-auto max-w-[1500px] px-5 py-7 lg:px-9 lg:py-9"><div className="mb-7 flex flex-col justify-between gap-5 xl:flex-row xl:items-end"><div><div className="mb-3 flex items-center gap-2"><Badge className="border-cyan-300/20 bg-cyan-300/10 text-cyan-200"><Activity size={12} className="mr-1.5" /> Live intelligence layer</Badge><span className="text-xs text-slate-500">Updated just now · Synthetic data only</span></div><h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">A clearer signal across the national tax universe.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Connect risk, operations, and policy intelligence in one controlled workspace. Every flag is explainable, auditable, and subject to human review.</p></div><div className="flex items-center gap-2"><div className="flex items-center rounded-xl border border-white/10 bg-white/[0.03] p-1"><span className="px-2 text-[10px] uppercase tracking-wider text-slate-500">View as</span>{(Object.keys(roleLabels) as Role[]).map((key) => <button key={key} onClick={() => { if (!auth.isAuthenticated) setRole(key); }} className={`rounded-lg px-2.5 py-1.5 text-xs transition ${effectiveRole === key ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-200"}`}>{roleLabels[key].replace("TRA Leadership", "Admin")}</button>)}</div><Button onClick={() => setShowSimulation(true)} className="h-10 rounded-xl bg-cyan-300 px-4 text-sm font-semibold text-[#07121f] hover:bg-cyan-200"><Sparkles size={15} className="mr-2" />New simulation</Button></div></div>
 

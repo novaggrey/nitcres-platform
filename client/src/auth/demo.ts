@@ -14,3 +14,9 @@ export function startDemoSession() {
 export function endDemoSession() {
   window.localStorage.removeItem(DEMO_SESSION_KEY);
 }
+
+export async function completeLogout(logout: () => Promise<unknown> | unknown, onDemoCleared: () => void) {
+  endDemoSession();
+  onDemoCleared();
+  await logout();
+}
