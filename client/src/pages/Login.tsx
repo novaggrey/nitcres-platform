@@ -3,25 +3,32 @@ import { Link, useLocation } from "wouter";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_EMAIL, DEMO_PASSWORD, startDemoSession } from "@/auth/demo";
+import { DEMO_EMAIL, DEMO_PASSWORD, startDemoSession, type DemoRole } from "@/auth/demo";
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+
+const demoRoles: Array<{ key: DemoRole; label: string; description: string }> = [
+  { key: "admin", label: "Admin", description: "Leadership overview" },
+  { key: "auditor", label: "Auditor", description: "Cases and evidence" },
+  { key: "risk_analyst", label: "Risk Analyst", description: "Risk and graph signals" },
+  { key: "customs_officer", label: "Customs Officer", description: "Border intelligence" },
+  { key: "policy_analyst", label: "Policy Analyst", description: "Tax gaps and simulations" },
+];
 
 export default function Login() {
   const [, navigate] = useLocation();
   const [email, setEmail] = useState(DEMO_EMAIL);
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<DemoRole>("admin");
 
   const demoMutation = trpc.auth.demoAccess.useMutation({
     onSuccess: () => {
-      startDemoSession();
+      startDemoSession(selectedRole);
       navigate("/");
     },
-    onError: (err) => {
-      toast.error(err.message);
-    },
+    onError: (err) => toast.error(err.message),
   });
 
   const enterDemo = () => {
@@ -50,14 +57,15 @@ export default function Login() {
               <div className="flex items-center gap-2 text-xs font-medium text-slate-300"><LockKeyhole size={14} className="text-cyan-300" /> Demo access · synthetic environment</div>
               <label className="mt-5 block text-xs text-slate-500">Demo email<input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-[#081725] px-3 text-sm text-white outline-none transition focus:border-cyan-300/50" autoComplete="username" /></label>
               <label className="mt-4 block text-xs text-slate-500">Demo password<div className="relative mt-2"><input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} className="h-11 w-full rounded-xl border border-white/10 bg-[#081725] px-11 pr-12 text-sm text-white outline-none transition focus:border-cyan-300/50" autoComplete="current-password" aria-describedby="demo-password-help" /><button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide demo password" : "Show demo password"} aria-pressed={showPassword} className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70">{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
-              <Button onClick={enterDemo} disabled={demoMutation.isPending} className="mt-5 h-11 w-full rounded-xl bg-cyan-300 font-semibold text-[#06111d] hover:bg-cyan-200">{demoMutation.isPending ? "Validating..." : "Enter demo workspace"} <ArrowRight size={16} className="ml-2" /></Button>
+              <div className="mt-5"><p className="text-xs text-slate-500">Choose a demo workspace</p><div className="mt-2 grid gap-2 sm:grid-cols-2">{demoRoles.map((demoRole) => <button key={demoRole.key} type="button" onClick={() => setSelectedRole(demoRole.key)} className={`rounded-xl border p-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-cyan-300/40 ${selectedRole === demoRole.key ? "border-cyan-300/50 bg-cyan-300/10" : "border-white/10 bg-[#081725]"}`}><p className="text-xs font-semibold text-slate-200">{demoRole.label}</p><p className="mt-1 text-[10px] text-slate-500">{demoRole.description}</p></button>)}</div></div>
+              <Button onClick={enterDemo} disabled={demoMutation.isPending} className="mt-5 h-11 w-full rounded-xl bg-cyan-300 font-semibold text-[#06111d] transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-200 active:translate-y-0">{demoMutation.isPending ? "Validating..." : `Enter ${demoRoles.find((item) => item.key === selectedRole)?.label ?? "demo"} workspace`} <ArrowRight size={16} className="ml-2" /></Button>
               <p id="demo-password-help" className="mt-3 text-center text-[11px] leading-5 text-slate-600">Demo access previews synthetic records only. It does not create an authenticated institutional session or authorize protected actions.</p>
             </div>
 
             <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[.2em] text-slate-600"><span className="h-px flex-1 bg-white/10" />or<span className="h-px flex-1 bg-white/10" /></div>
-            <Button onClick={() => startLogin()} variant="outline" className="h-11 w-full rounded-xl border-white/15 bg-transparent text-sm text-slate-200 hover:bg-white/[0.05]">Continue with secure institutional sign-in</Button>
+            <Button onClick={() => startLogin()} variant="outline" className="h-11 w-full rounded-xl border-white/15 bg-transparent text-sm text-slate-200 transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.05]">Continue with secure institutional sign-in</Button>
             <div className="mt-7 space-y-3 text-xs text-slate-500"><p className="flex gap-2"><CheckCircle2 size={14} className="shrink-0 text-emerald-300" /> Every intelligence signal remains subject to human review.</p><p className="flex gap-2"><CheckCircle2 size={14} className="shrink-0 text-emerald-300" /> All preview records are synthetic and clearly marked.</p></div>
-            <p className="mt-8 text-center text-xs text-slate-600"><Link href="/" className="text-cyan-300 hover:text-cyan-200">Return to public preview</Link></p>
+            <p className="mt-8 text-center text-xs text-slate-600"><Link href="/login" className="text-cyan-300 hover:text-cyan-200">Secure landing page</Link></p>
           </div>
         </section>
       </div>
