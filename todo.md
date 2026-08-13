@@ -64,8 +64,17 @@
 
 ## Login and GitHub delivery
 
-- [ ] Add a dedicated NITCRES login page with pre-filled, clearly labeled demo credentials
-- [ ] Preserve secure authentication boundaries and distinguish demo access from production OAuth
-- [ ] Validate the login page visually, functionally, responsively, and with tests
-- [ ] Create a separately documented commit for the login-page implementation
-- [ ] Push the login commit to the configured GitHub repository and verify the remote branch
+- [x] Add a dedicated NITCRES login page with pre-filled, clearly labeled demo credentials
+- [x] Preserve secure authentication boundaries and distinguish demo access from production OAuth
+- [x] Validate the login page visually, functionally, responsively, and with tests
+- [x] Create a separately documented commit for the login-page implementation
+- [x] Push the login commit to the configured GitHub repository and verify the remote branch
+
+## Login verification follow-up
+
+- [x] Add and commit login-page test coverage that is executed by Vitest, then rerun the suite and confirm the login test file is included
+- [x] Capture explicit mobile-width visual verification for `/login` and document the responsive result
+
+## Commit verification follow-up
+
+- [ ] Create and verify a separately documented Git commit for the executed login test coverage and responsive verification updates
